@@ -52,24 +52,24 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('OCR'),
+        title: const Text('OCR'),
         centerTitle: true,
       ),
       body: Padding(
-        padding: EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(8.0),
         child: SingleChildScrollView(
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 _imageFile == null ?
-                Text('No image selected')
+                const Text('No image selected')
                 :
                 Container(
                   height: 300,
                   decoration: BoxDecoration(
                     shape: BoxShape.rectangle,
-                    color: Colors.grey,
+                    color: Colors.blueGrey,
                     image: DecorationImage(image: FileImage(_imageFile!)),
                     borderRadius: BorderRadius.circular(30.0),
                   ),
@@ -78,48 +78,68 @@ class _MyHomePageState extends State<MyHomePage> {
                   //   child: Image.file(_imageFile!),
                   // )
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () => _pickImage(ImageSource.gallery),
-                  child: Text('Select Image from Gallery'),
+                  child: const Text('Select Image from Gallery'),
                 ),
                 ElevatedButton(
                   onPressed: () => _pickImage(ImageSource.camera),
-                  child: Text('Capture Image from Camera'),
+                  child: const Text('Capture Image from Camera'),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Text(_recognizedText),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 prediction!=null?
                 ElevatedContainer(
-                  color: Colors.tealAccent,
+                  color: Colors.blueGrey,
                   borderRadius: 30.0,
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: Column(
                       children: [
-                        Row(
+                        const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
                               'PREDICTION RESULT ',
-                              style: TextStyle(fontSize: 20),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                              ),
                             ),
-                            Icon(Icons.access_alarm)
+                            Icon(Icons.access_alarm, color: Colors.white,)
                           ],
                         ),
-                        Text(
-                          '${prediction.toString()},\n${result}',
-                          // style: TextStyle(fontSize: 20),
+                        Container(
+                          decoration: BoxDecoration(
+                              color: Colors.white38,
+                              shape: BoxShape.rectangle,
+                              borderRadius: BorderRadius.circular(20.0)
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              '${prediction.toString()},\n$result',
+                              // style: TextStyle(fontSize: 20),
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   )
                 )
-                    :
-                SizedBox(),
+                :_imageFile == null? //IF NO IMAGE & NO PREDICTION
+                const SizedBox()
+                :
+                const SizedBox(
+                  height: 50,
+                  width: 50,
+                  child: CircularProgressIndicator(),
+                ),
 
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
               ],
             ),
           ),
@@ -129,7 +149,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _checkPrediction(){
-    postRequest('Mambo','Poa@niaje.com');
+    postRequest('Testor','Testor@development.com');
   }
   Future<Map<String, dynamic>> postRequest(String name, String email) async { // To store the result from the API call
     // todo - fix baseUrl
