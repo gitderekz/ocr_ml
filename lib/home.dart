@@ -184,7 +184,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<Map<String, dynamic>> postRequest(String name, String email) async { // To store the result from the API call
     // todo - fix baseUrl
     // var url = 'https://jsonplaceholder.typicode.com/posts';
-    var url = 'https://jsonplaceholder.typicode.com/posts';
+    var url = 'http://jsonplaceholder.typicode.com/posts';
     var body = json.encode({
       'name': name,
       'email': email,
