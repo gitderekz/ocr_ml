@@ -1,8 +1,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:ocr_ml/home.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+late SharedPreferences sharedPreferences;
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  sharedPreferences = await SharedPreferences.getInstance();
   runApp(MyApp());
 }
 

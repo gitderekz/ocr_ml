@@ -1,11 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:http/http.dart' as http;
 
+import 'components/app_drawer.dart';
 import 'components/elevated_container.dart';
+import 'main.dart';
 
 class MyHomePage extends StatefulWidget {
   @override
@@ -13,6 +17,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  ScrollController scrollController = ScrollController();
   File? _imageFile;
   String _recognizedText = 'No text recognized';
   var prediction,response;
@@ -55,6 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
         title: const Text('OCR'),
         centerTitle: true,
       ),
+      drawer: AppDrawer(),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
         child: SingleChildScrollView(
@@ -73,10 +79,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     image: DecorationImage(image: FileImage(_imageFile!)),
                     borderRadius: BorderRadius.circular(30.0),
                   ),
-                  // child: Padding(
-                  //   padding: const EdgeInsets.all(8.0),
-                  //   child: Image.file(_imageFile!),
-                  // )
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
@@ -88,7 +90,35 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: const Text('Capture Image from Camera'),
                 ),
                 const SizedBox(height: 20),
-                Text(_recognizedText),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: MediaQuery.of(context).size.width*0.95,
+                      height: 150,
+                      padding: EdgeInsets.all(8.0),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(20)
+                      ),
+                      child: Scrollbar(
+                        controller: scrollController,
+                        thumbVisibility: true,
+                        trackVisibility: true,
+                        child: SingleChildScrollView(
+                          controller: scrollController,
+                          child: Text(
+                            overflow: TextOverflow.clip,
+                            _recognizedText,
+                            style: TextStyle(
+                              fontSize: 16
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 20),
                 prediction!=null?
                 ElevatedContainer(
@@ -174,9 +204,6 @@ class _MyHomePageState extends State<MyHomePage> {
         // },
         body: body,
       );
-      setState(() {
-        response = response;
-      });
       
       // todo - handle non-200 status code, etc
       if (response.statusCode == 201) {
@@ -184,6 +211,16 @@ class _MyHomePageState extends State<MyHomePage> {
         final responseData = jsonDecode(response.body);
         setState(() {
           result = 'ID: ${responseData['id']}\nName: ${responseData['name']}\nEmail: ${responseData['email']}';
+
+          var presence = sharedPreferences.containsKey('history');
+          if(presence){
+            List<String> history = sharedPreferences.getStringList('history')!;
+            history.add('${body}=>${result}');
+            sharedPreferences.setStringList('history', history);
+          }else{
+            sharedPreferences.setStringList('history', ['${body}=>${result}']);
+          }
+
         });
       } else {
         // If the server returns an error response, throw an exception
