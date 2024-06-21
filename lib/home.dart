@@ -151,7 +151,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text(
-                              '${prediction.toString()},\n$result',
+                              '${prediction.toString()}',
                               // style: TextStyle(fontSize: 20),
                             ),
                           ),
@@ -179,16 +179,24 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _checkPrediction(){
-    postRequest('Testor','Testor@development.com');
+    prediction != null?prediction=null:null;
+    // postRequest('1234567890','Mambo emmy');
+    postRequest('1234567890',_recognizedText);
   }
-  Future<Map<String, dynamic>> postRequest(String name, String email) async { // To store the result from the API call
+  void postRequest(String phone, String message) async { // To store the result from the API call
     // todo - fix baseUrl
     // var url = 'https://jsonplaceholder.typicode.com/posts';
-    var url = 'http://jsonplaceholder.typicode.com/posts';
-    var body = json.encode({
-      'name': name,
-      'email': email,
-    });
+    // var url = 'http://127.0.0.1:5000/predict';
+    // var url = 'http://localhost:5000/predict';
+    var url = 'http://192.168.1.152:5000/predict';
+    // var body = json.encode({
+    //   'phone': phone,
+    //   'message': message,
+    // });
+    var body = {
+      'phone': phone,
+      'message': message,
+    };
 
     print('Body: $body');
 
@@ -196,46 +204,44 @@ class _MyHomePageState extends State<MyHomePage> {
       response = await http.post(
         Uri.parse(url),
         headers: {
-          'accept': 'application/json',
-          'Content-Type': 'application/json; charset=UTF-8',
+          // 'accept': 'application/json',
+          // 'Content-Type': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-        // headers: {
-        //   'accept': 'application/json',
-        //   'Content-Type': 'application/json-patch+json',
-        // },
         body: body,
       );
+
+      print('STATUS: ${response.statusCode}');
       
       // todo - handle non-200 status code, etc
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         // Successful POST request, handle the response here
         final responseData = jsonDecode(response.body);
         setState(() {
-          result = 'ID: ${responseData['id']}\nName: ${responseData['name']}\nEmail: ${responseData['email']}';
+          // result = 'ID: ${responseData['id']}\nName: ${responseData['name']}\nEmail: ${responseData['email']}';
+          result = responseData['result'];
 
           var presence = sharedPreferences.containsKey('history');
           if(presence){
             List<String> history = sharedPreferences.getStringList('history')!;
-            history.add('${body}=>${result}');
+            history.add('${_recognizedText}=>${result}');
             sharedPreferences.setStringList('history', history);
           }else{
-            sharedPreferences.setStringList('history', ['${body}=>${result}']);
+            sharedPreferences.setStringList('history', ['${_recognizedText}=>${result}']);
           }
-
+          prediction = result;//json.decode(response.body);
         });
       } else {
         // If the server returns an error response, throw an exception
-        throw Exception('Failed to post data');
+        result = 'Error: Failed!';
+        prediction = 'Failed!';
+        throw Exception('Failed!');
       }
     } on Exception catch (e) {
       setState(() {
         result = 'Error: $e';
+        prediction = 'Failed!';
       });
     }
-
-    setState(() {
-      prediction = json.decode(response.body);
-    });
-    return json.decode(response.body);
   }
 }
