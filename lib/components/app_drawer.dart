@@ -1,5 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:ocr_ml/history.dart';
+import 'package:ocr_ml/main.dart';
 
 class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
@@ -9,12 +11,13 @@ class AppDrawer extends StatefulWidget {
 }
 
 class _AppDrawerState extends State<AppDrawer> {
+  TextEditingController textEditingController = TextEditingController();
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-
+    textEditingController.text = sharedPreferences.getString('url')!;
   }
 
   @override
@@ -61,7 +64,20 @@ class _AppDrawerState extends State<AppDrawer> {
                         Icon(Icons.work_history_rounded),
                       ],
                     ),
-                  )
+                  ),
+                  Padding(
+                      padding: EdgeInsets.only(left: 8.0),
+                      child: Container(
+                        height: 60,
+                        child: TextFormField(
+                          decoration: InputDecoration(
+                              labelText: 'Address'
+                          ),
+                          controller: textEditingController,
+                          onChanged: (url)=>(sharedPreferences.setString('url', '${url}'))
+                        ),
+                      ),
+                  ),
                 ],
               ),
             ),

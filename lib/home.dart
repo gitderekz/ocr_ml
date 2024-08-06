@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:http/http.dart' as http;
@@ -16,6 +17,13 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
+class CropAspectRatioPresetCustom implements CropAspectRatioPresetData {
+  @override
+  (int, int)? get data => (2, 3);
+
+  @override
+  String get name => '2x3 (customized)';
+}
 class _MyHomePageState extends State<MyHomePage> {
   ScrollController scrollController = ScrollController();
   File? _imageFile;
@@ -24,15 +32,73 @@ class _MyHomePageState extends State<MyHomePage> {
   String result = '';
   final textDetector = GoogleMlKit.vision.textRecognizer();
 
+  // Future<void> _pickImage(ImageSource source) async {
+  //   final pickedFile = await ImagePicker().pickImage(source: source);
+  //   if (pickedFile != null) {
+  //     setState(() {
+  //       _imageFile = File(pickedFile.path);
+  //       _recognizedText = 'Recognizing...';
+  //     });
+  //     _recognizeText();
+  //   }
+  // }
+
   Future<void> _pickImage(ImageSource source) async {
     final pickedFile = await ImagePicker().pickImage(source: source);
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-        _recognizedText = 'Recognizing...';
-      });
-      _recognizeText();
-    }
+
+    final croppedFile = await ImageCropper().cropImage(
+      sourcePath: pickedFile!.path,
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: 'Cropper',
+          toolbarColor: Colors.deepOrange,
+          toolbarWidgetColor: Colors.white,
+          aspectRatioPresets: [
+            CropAspectRatioPreset.original,
+            CropAspectRatioPreset.square,
+            CropAspectRatioPresetCustom(),
+          ],
+        ),
+        IOSUiSettings(
+          title: 'Cropper',
+          aspectRatioPresets: [
+            CropAspectRatioPreset.original,
+            CropAspectRatioPreset.square,
+            CropAspectRatioPresetCustom(), // IMPORTANT: iOS supports only one custom aspect ratio in preset list
+          ],
+        ),
+        WebUiSettings(
+          context: context,
+        ),
+      ],
+    );
+    // if (pickedFile != null) {
+    //   CroppedFile? croppedFile = await ImageCropper().cropImage(
+    //     sourcePath: pickedFile.path,
+    //     aspectRatio: CropAspectRatio(ratioX: 1.0, ratioY: 1.0),  // Example aspect ratio
+    //     uiSettings: [
+    //       AndroidUiSettings(
+    //         toolbarTitle: 'Crop Image',
+    //         toolbarColor: Colors.deepOrange,
+    //         toolbarWidgetColor: Colors.white,
+    //         initAspectRatio: CropAspectRatioPreset.original,
+    //         lockAspectRatio: false,
+    //       ),
+    //       IOSUiSettings(
+    //         minimumAspectRatio: 1.0,
+    //       ),
+    //     ],
+    //   );
+    //
+      if (croppedFile != null) {
+        setState(() {
+          // _imageFile = croppedFile;
+          _imageFile = File(croppedFile.path);  // Convert CroppedFile to File
+          _recognizedText = 'Recognizing...';
+        });
+        _recognizeText();
+      }
+    // }
   }
 
   Future<void> _recognizeText() async {
@@ -51,6 +117,13 @@ class _MyHomePageState extends State<MyHomePage> {
   void dispose() {
     textDetector.close();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    sharedPreferences.setString('url', 'http://192.168.5.15:5000/predict');
   }
 
   @override
@@ -188,7 +261,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // var url = 'https://jsonplaceholder.typicode.com/posts';
     // var url = 'http://127.0.0.1:5000/predict';
     // var url = 'http://localhost:5000/predict';
-    var url = 'http://192.168.1.152:5000/predict';
+    var url = sharedPreferences.containsKey('url')?sharedPreferences.getString('url'):'http://192.168.5.15:5000/predict';
     // var body = json.encode({
     //   'phone': phone,
     //   'message': message,
@@ -202,7 +275,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     try {
       response = await http.post(
-        Uri.parse(url),
+        Uri.parse(url!),
         headers: {
           // 'accept': 'application/json',
           // 'Content-Type': 'application/json',
@@ -230,17 +303,20 @@ class _MyHomePageState extends State<MyHomePage> {
             sharedPreferences.setStringList('history', ['${_recognizedText}=>${result}']);
           }
           prediction = result;//json.decode(response.body);
+          print('IMEFANIKIWA');
         });
       } else {
         // If the server returns an error response, throw an exception
         result = 'Error: Failed!';
         prediction = 'Failed!';
+        print('HAIJAFANIKIWA ELSE');
         throw Exception('Failed!');
       }
-    } on Exception catch (e) {
+    } catch (e) {
       setState(() {
         result = 'Error: $e';
         prediction = 'Failed!';
+        print('HAIJAFANIKIWA EXCEPTION $result');
       });
     }
   }
